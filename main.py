@@ -4,6 +4,7 @@ K=[1,-1,16,-16,15,-15,17,-17]
 V=[0,100,320,330,500,900,0]
 Z=lambda r:[(ord(c)-104)*5 for c in r]
 PM=[0,*map(Z,"hhijkmph dhijkkif fiijjihg hhhhijki ghhhhhhh jhfdb```".split())]
+PE=PM[:];PE[1]=Z("hijlosxh");PE[6]=Z("dgikmnnl")
 X=Exception
 def att(b,s,c):
  for d in N:
@@ -62,27 +63,27 @@ def mk(b,cs,ep,m):
  b=b[:];p=b[f];b[s]=pr|p&8 if pr else p;b[f]=0;n=-1
  if l&2:b[s-16 if p<8 else s+16]=0
  if l&4:n=(f+s)//2
- if l&8:b[f+3 if s>f else f-4]=0;b[f+1 if s>f else f-1]=p&8|4
- if p&7==6:cs&=~(3<<2*(p>8))
- for q in(f,s):cs&=~R.get(q,0)
+ if l&8:b[s+1 if s>f else s-2]=0;b[s-1 if s>f else s+1]=p&8|4
+ cs&=~R.get(f,0)&~R.get(s,0)
  return b,cs,n
 ck=lambda b,w:att(b,b.index(14-8*w),8*w)
 def legal(b,w,cs,ep,q=0):return[(m,c)for m in gen(b,w,cs,ep,q)for c in[mk(b,cs,ep,m)]if not ck(c[0],w)]
 def ev(b,w):
- a=0
+ g=[0,0];h=a=0;B=[0,0]
  for f in range(128):
   p=b[f]
   if f&136 or not p:continue
   t=p&7;c=p>>3;r=f>>4 if c==0 else 7-(f>>4);z=1-2*c
-  a+=z*(V[t]+PM[t][r])
- return a if w else-a
-R={0:2,7:1,112:8,119:4}
-T={};KL={};n=0
+  a+=z*V[t];g[0]+=z*PM[t][r];g[1]+=z*PE[t][r];h+=V[t]//200;B[c]+=t==3
+ h=min(h,24);v=a+30*((B[0]>1)-(B[1]>1))+(g[0]*h+g[1]*(24-h))//24
+ return v if w else-v
+R={0:2,7:1,112:8,119:4,4:3,116:12}
+T={};n=0
 def s(b,w,cs,ep,d,a,z,pl):
  global n
  n+=1
- if n>2e4:raise X
- chk=ck(b,w);q=d<=0;h=0;best=-9**5
+ if n>3e4:raise X
+ chk=ck(b,w);q=d<=0;h=0;best=-1e9
  if q and not chk:
   best=ev(b,w)
   if best>=z:return best
@@ -93,39 +94,32 @@ def s(b,w,cs,ep,d,a,z,pl):
   if e[0]>=d and(e[2]<1 or e[1]>=z if e[2]<2 else e[1]<=a):return e[1]
  def key(x):
   m=x[0]
-  if m==h:return 9**9
-  if m>>17&3:return 9**7+V[b[m&127]&7]*10
-  if m in KL.get(pl,()):return 9**5
-  return 0
+  return 1e9 if m==h else 1e7+V[b[m>>7&127]&7]*10-V[b[m&127]&7] if m>>17&3 else 0
  ms=sorted(legal(b,w,cs,ep,q and not chk),key=key,reverse=True)
- if not ms:return(-30000+pl if chk else best if q else 0)
+ if not ms:return(-3e4+pl if chk else best if q else 0)
  bm=0;fl=2
  for m,c in ms:
   v=-s(c[0],not w,c[1],c[2],d-1,-z,-a,pl+1)
   if v>best:best=v;bm=m
   if v>a:a=v;fl=0
-  if a>=z:
-   fl=1
-   if not q and not m>>17&1:
-    KL[pl]=[m]+KL.get(pl,[])[:1]
-   break
+  if a>=z:fl=1;break
  if not q:T[k]=(d,best,fl,bm)
  return best
 def uci(m):
- r=lambda x:chr(97+(x&7))+str((x>>4)+1)
+ r=lambda x:chr(x%8+97)+str(x//16+1)
  p=m>>14&7
  return r(m&127)+r(m>>7&127)+" pnbrq"[p].strip()
 def best(b,w,cs,ep,L):
  global n
- n=0;T.clear();KL.clear()
+ n=0;T.clear()
  ms=[m for m,c in legal(b,w,cs,ep)if uci(m)in L]
  bm=ms[0]
  try:
   for d in range(1,8):
-   a=-9**5;cb=bm
+   a=-1e9;cb=bm
    for m in[bm]+[x for x in ms if x!=bm]:
     c=mk(b,cs,ep,m)
-    v=-s(c[0],not w,c[1],c[2],d-1,-9**5,-a,1)
+    v=-s(c[0],not w,c[1],c[2],d-1,-1e9,-a,1)
     if v>a:a=v;cb=m
    bm=cb
  except X:pass
@@ -139,9 +133,9 @@ def fen(F):
    else:b[(7-i)*16+x]="xPNBRQK".index(ch.upper())+8*ch.islower();x+=1
  return b,c=="w",cs,-1 if e=="-"else ord(e[0])-97+16*(int(e[1])-1)
 def P(p,x):
- return json.load(U.urlopen(U.Request(E+p,json.dumps(x).encode(),{"content-type":"application/json"})))
+ return json.load(U.urlopen(E+p,json.dumps(x).encode()))
 if __name__=="__main__":
- E=os.environ["MAKEFUN_ENV_URL"]
+ E=os.getenv("MAKEFUN_ENV_URL")
  while 1:
   g=P("/game",{})
   if g["status"]=="done":break
