@@ -82,8 +82,8 @@ T={};n=0
 def s(b,w,cs,ep,d,a,z,pl):
  global n
  n+=1
- if n>3e4:raise X
- chk=ck(b,w);q=d<=0;h=0;best=-1e9
+ if n>5e4:raise X
+ chk=ck(b,w);d+=chk==1;q=d<=0;h=0;best=-1e9
  if q and not chk:
   best=ev(b,w)
   if best>=z:return best
@@ -94,7 +94,7 @@ def s(b,w,cs,ep,d,a,z,pl):
   if e[0]>=d and(e[2]<1 or e[1]>=z if e[2]<2 else e[1]<=a):return e[1]
  def key(x):
   m=x[0]
-  return 1e9 if m==h else 1e7+V[b[m>>7&127]&7]*10-V[b[m&127]&7] if m>>17&3 else 0
+  return 1e9 if m==h else 1e7+V[b[m>>7&127]&7]*10-V[b[m&127]&7] if m>>17&3 or m>>14&7 else 0
  ms=sorted(legal(b,w,cs,ep,q and not chk),key=key,reverse=True)
  if not ms:return(-3e4+pl if chk else best if q else 0)
  bm=0;fl=2
@@ -111,11 +111,11 @@ def uci(m):
  return r(m&127)+r(m>>7&127)+" pnbrq"[p].strip()
 def best(b,w,cs,ep,L):
  global n
- n=0;T.clear()
+ n=0
  ms=[m for m,c in legal(b,w,cs,ep)if uci(m)in L]
  bm=ms[0]
  try:
-  for d in range(1,8):
+  for d in range(1,9):
    a=-1e9;cb=bm
    for m in[bm]+[x for x in ms if x!=bm]:
     c=mk(b,cs,ep,m)
